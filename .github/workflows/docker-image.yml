@@ -28,5 +28,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            smoothbear/server:latest
-            smoothbear/server:${{ env.RELEASE_VERSION }}
+            smoothbear/shinemuscat-server:latest
+            smoothbear/shinemuscat-server:${{ env.RELEASE_VERSION }}

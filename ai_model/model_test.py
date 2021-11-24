@@ -7,7 +7,7 @@ model = tf.keras.models.load_model("./model/tf_model")
 try:
     text = sys.argv[1]
 except IndexError:
-    text = p.getTestData()
+    text = input("User >> ")
 
 output = model.generate(p.encoding(text))
 print(p.decoding(output))

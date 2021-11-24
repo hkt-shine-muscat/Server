@@ -1,11 +1,9 @@
-FROM rackspacedot/python38
-LABEL author="smoothbear04@gmail.com"
+FROM tiangolo/uvicorn-gunicorn:python3.8
 
-RUN apt-get update -y
-RUN apt-get install -y python-pip python-dev build-essential
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY . /app
 WORKDIR /app
 
-RUN pip3 install -r requirements.txt
 CMD ["uvicorn", "server:app"]

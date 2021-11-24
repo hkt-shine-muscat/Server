@@ -1,7 +1,7 @@
-from typing import Any, List
+from typing import Any
 from fastapi import APIRouter
 
-from schema.model import Hello
+from app.schema.model import Hello
 
 router = APIRouter()
 

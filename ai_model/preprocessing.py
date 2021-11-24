@@ -1,7 +1,8 @@
-from transformers import AutoTokenizer, AutoConfig
+from transformers import BertTokenizerFast
 import tensorflow as tf
 import pandas as pd
 import json
+import os
 
 def make_dataset():
     file_name = ""
@@ -21,26 +22,40 @@ class Preprocesser:
         self.output_dim = 0
         # data
         self.data_num = 0
-        self.PREMODEL_NAME = ""
-        self.trainData = pd.read_csv("./data/train.txt", sep="\t", names=[])
-        self.validationData = pd.read_csv("./data/validation.txt", sep="\t", names=[])
-        self.testData = pd.read_csv("./data/test.txt", sep="\t", names=[])
+        self.PREMODEL_NAME = "byeongal/Ko-DialoGPT"
+        # dialogue : S1</s>S2</s> | response : <s>R1.
+        self.trainData = pd.read_csv("./data/train.txt", sep="\t", names=["dialogue", "response"])
+        self.validationData = pd.read_csv("./data/validation.txt", sep="\t", names=["dialogue", "response"])
+        self.testData = pd.read_csv("./data/test.txt", sep="\t", names=["dialogue", "response"])
         # tokenizers
-        self.tokenizer = AutoTokenizer.from_pretrained(self.PREMODEL_NAME)
+        self.tokenizer = BertTokenizerFast.from_pretrained(self.PREMODEL_NAME)
 
     def getTrainData(self):
-        pass
+        train_x = self.tokenizer.batch_encode_plus(self.trainData["dialogue"], return_tensors="tf",
+                                                   max_length=self.input_dim, padding="max_length", truncation=True)
+        train_y = self.tokenizer.batch_encode_plus(self.trainData["response"], return_tensors="tf",
+                                                   max_length=self.output_dim, padding="max_length", truncation=True)
+
+        return tf.data.Dataset.from_tensor_slices((train_x, train_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def getValidationData(self):
-        pass
+        validation_x = self.tokenizer.batch_encode_plus(self.validationData["dialogue"], return_tensors="tf",
+                                                        max_length=self.input_dim, padding="max_length", truncation=True)
+        validation_y = self.tokenizer.batch_encode_plus(self.validationData["response"], return_tensors="tf",
+                                                        max_length=self.output_dim, padding="max_length", truncation=True)
+
+        return tf.data.Dataset.from_tensor_slices((validation_x, validation_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def getTestData(self):
-        pass
+        test_x = self.tokenizer.batch_encode_plus(self.testData["dialogue"], return_tensors="tf",
+                                                  max_length=self.input_dim, padding="max_length", truncation=True)
+        test_y = self.tokenizer.batch_encode_plus(self.testData["response"], return_tensors="tf",
+                                                  max_length=self.output_dim, padding="max_length", truncation=True)
+
+        return tf.data.Dataset.from_tensor_slices((test_x, test_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def encoding(self, text: str):
         return self.tokenizer.encode(text)
 
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
-
-

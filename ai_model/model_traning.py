@@ -1,10 +1,10 @@
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from transformers import TFAutoModelForCausalLM
 from preprocessing import Preprocesser
-from transformers import TFAutoModel
 import tensorflow as tf
 
 p = Preprocesser()
-model = TFAutoModel.from_pretrained(p.PREMODEL_NAME)
+model = TFAutoModelForCausalLM.from_pretrained(p.PREMODEL_NAME, from_pt=True)
 
 optim = tf.keras.optimizers.Adam(learning_rate=p.lr)
 loss = tf.keras.losses.sparse_categorical_crossentropy(from_logits=True)

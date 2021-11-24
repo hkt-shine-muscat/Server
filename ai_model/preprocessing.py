@@ -1,4 +1,4 @@
-from transformers import BertTokenizerFast
+from transformers import GPT2TokenizerFast
 import tensorflow as tf
 import pandas as pd
 import json
@@ -23,12 +23,12 @@ class Preprocesser:
         # data
         self.data_num = 0
         self.PREMODEL_NAME = "byeongal/Ko-DialoGPT"
-        # dialogue : S1</s>S2</s> | response : <s>R1.
+        # dialogue : S1</s>S2</s> | response : <s>R1</s>
         self.trainData = pd.read_csv("./data/train.txt", sep="\t", names=["dialogue", "response"])
         self.validationData = pd.read_csv("./data/validation.txt", sep="\t", names=["dialogue", "response"])
         self.testData = pd.read_csv("./data/test.txt", sep="\t", names=["dialogue", "response"])
         # tokenizers
-        self.tokenizer = BertTokenizerFast.from_pretrained(self.PREMODEL_NAME)
+        self.tokenizer = GPT2TokenizerFast.from_pretrained(self.PREMODEL_NAME)
 
     def getTrainData(self):
         train_x = self.tokenizer.batch_encode_plus(self.trainData["dialogue"], return_tensors="tf",
@@ -55,7 +55,7 @@ class Preprocesser:
         return tf.data.Dataset.from_tensor_slices((test_x, test_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def encoding(self, text: str):
-        return self.tokenizer.encode(text)
+        return self.tokenizer.encode(text + self.tokenizer.eos_token)
 
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)

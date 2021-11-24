@@ -7,4 +7,6 @@ router = APIRouter()
 
 @router.get("/", response_model=Hello)
 def hello() -> Any:
-    return Hello("Hello!")
+    return Hello(
+        greeting="Hello!"
+    )

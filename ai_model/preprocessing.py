@@ -35,19 +35,24 @@ def make_dataset():
     for filename in os.listdir("./data/raw_data/koreanConversation"):
         temp = ""
         ks_data = pd.read_excel("./data/raw_data/koreanConversation/"+filename)[["SENTENCE", "SENTENCEID", "QA"]]
-        for sent, sentID, QA in ks_data.loc:
-            temp = "" if sentID == "1" else temp
-            if QA == "A":
-                if random.randint(1, 10) > 4:
-                    trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
-                else:
-                    valData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
-            temp += sent + "</s>"
+        try:
+            for sent, sentID, QA in ks_data.loc:
+                temp = "" if sentID == "1" else temp
+                if QA == "A":
+                    if random.randint(1, 10) > 4:
+                        trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                    else:
+                        valData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                temp += sent + "</s>"
+        except KeyError:
+            continue
     print("KoreanConversation Complete.")
     # kcs
     for TorV in ["train", "valid"]:
+        print("KCS " + TorV + " start.")
         for filename in os.listdir("./data/raw_data/kcs_"+TorV):
             kcs_data = json.load(open("./data/raw_data/kcs_"+TorV+"/"+filename, "r+", encoding="utf-8"))["data"]
+            print(TorV+" "+filename+" start.")
             for conv in kcs_data:
                 temp = ""
                 temp_sent = ""
@@ -118,5 +123,6 @@ class Preprocesser:
 
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
+
 
 

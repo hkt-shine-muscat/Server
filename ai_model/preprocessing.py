@@ -70,11 +70,13 @@ def make_dataset():
                                 valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             temp += temp_sent + "</s>"
                     temp_sent += dialogue["utterance"] + " "
+    print("KoreanConversationSummary Complete.")
     # save
     trainData.dropna()
     valData.dropna()
     trainData.to_csv("./data/train.txt", sep="\t")
     valData.to_csv("./data/validation.txt", sep="\t")
+    print("All Save Complete.")
 
 
 class Preprocesser:
@@ -118,4 +120,3 @@ class Preprocesser:
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
 
 
-make_dataset()

@@ -13,7 +13,7 @@ def make_dataset():
     chatbot_data = pd.read_csv("data/raw_data/ChatbotData.csv", names=["dialogue", "response", "labels"]).loc[1:].drop(["labels"], axis=1)
     chatbot_data["dialogue"].apply(lambda row: row+"</s>")
     chatbot_data["response"].apply(lambda row: "<s>"+row+"</s>")
-    trainData.append(chatbot_data)
+    trainData = trainData.append(chatbot_data)
     print("ChatbotData Complete.")
     # emotional
     emotional_dataT = json.load(open("./data/raw_data/emotional_Training.json", "r+", encoding="utf-8"))
@@ -22,13 +22,13 @@ def make_dataset():
         temp = ""
         for key, sent in conv["talk"]["content"].items():
             if key[:2] == "SS":
-                trainData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
+                trainData = trainData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     for conv in emotional_dataV:
         temp = ""
         for key, sent in conv["talk"]["content"].items():
             if key[:2] == "SS":
-                valData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
+                valData = valData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     print("EmotionalData Complete.")
     # koreanConversation
@@ -40,9 +40,9 @@ def make_dataset():
                 temp = "" if sentID == "1" else temp
                 if QA == "A":
                     if random.randint(1, 10) > 4:
-                        trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                        trainData = trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
                     else:
-                        valData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                        valData = valData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
                 temp += sent + "</s>"
         except KeyError:
             continue
@@ -61,18 +61,18 @@ def make_dataset():
                     if dialogue["turnID"] != pre_turn:
                         if dialogue["turnID"] == "T1":
                             if TorV == "train":
-                                trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                                trainData = trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             else:
-                                valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                                valData = valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             temp = ""
                             temp_sent = ""
                         elif int(dialogue["turnID"][1:]) % 2 == 0:
                             temp += temp_sent + "</s>"
                         else:
                             if TorV == "train":
-                                trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                                trainData = trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             else:
-                                valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                                valData = valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             temp += temp_sent + "</s>"
                     temp_sent += dialogue["utterance"] + " "
     print("KoreanConversationSummary Complete.")

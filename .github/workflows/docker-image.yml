@@ -28,5 +28,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/hkt-shine-muskat/server:latest
-            ghcr.io/hkt-shine-muskat/server:${{ env.RELEASE_VERSION }}
+            ghcr.io/hkt-shine-muscat/server:latest
+            ghcr.io/hkt-shine-muscat/server:${{ env.RELEASE_VERSION }}

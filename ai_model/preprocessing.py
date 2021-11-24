@@ -55,16 +55,26 @@ def make_dataset():
                 for dialogue in conv["body"]["dialogue"]:
                     if dialogue["turnID"] != pre_turn:
                         if dialogue["turnID"] == "T1":
-                            trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                            if TorV == "train":
+                                trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                            else:
+                                valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             temp = ""
                             temp_sent = ""
                         elif int(dialogue["turnID"][1:]) % 2 == 0:
                             temp += temp_sent + "</s>"
                         else:
-                            trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                            if TorV == "train":
+                                trainData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
+                            else:
+                                valData.append(pd.DataFrame([[temp, "<s>" + temp_sent + "</s>"]], columns=["dialogue", "response"]))
                             temp += temp_sent + "</s>"
                     temp_sent += dialogue["utterance"] + " "
-
+    # save
+    trainData.dropna()
+    valData.dropna()
+    trainData.to_csv("./data/train.txt", sep="\t")
+    valData.to_csv("./data/validation.txt", sep="\t")
 
 
 class Preprocesser:
@@ -82,7 +92,6 @@ class Preprocesser:
         # dialogue : S1</s>S2</s> | response : <s>R1</s>
         self.trainData = pd.read_csv("./data/train.txt", sep="\t", names=["dialogue", "response"])
         self.validationData = pd.read_csv("./data/validation.txt", sep="\t", names=["dialogue", "response"])
-        self.testData = pd.read_csv("./data/test.txt", sep="\t", names=["dialogue", "response"])
         # tokenizers
         self.tokenizer = GPT2TokenizerFast.from_pretrained(self.PREMODEL_NAME)
 
@@ -107,3 +116,6 @@ class Preprocesser:
 
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
+
+
+make_dataset()

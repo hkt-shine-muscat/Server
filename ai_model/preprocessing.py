@@ -22,12 +22,16 @@ def make_dataset():
         temp = ""
         for key, sent in conv["talk"]["content"].items():
             if key[:2] == "SS":
+                if sent.strip() == "" or len(sent.split("</s>")) > 5 :
+                    continue
                 trainData = trainData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     for conv in emotional_dataV:
         temp = ""
         for key, sent in conv["talk"]["content"].items():
             if key[:2] == "SS":
+                if sent.strip() == "" or len(sent.split("</s>")) > 5 :
+                    continue
                 valData = valData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     print("EmotionalData Complete.")
@@ -37,8 +41,10 @@ def make_dataset():
         ks_data = pd.read_excel("./data/raw_data/koreanConversation/"+filename)[["SENTENCE", "SENTENCEID", "QA"]]
         try:
             for sent, sentID, QA in ks_data.loc:
-                temp = "" if sentID == "1" else temp
+                temp = "" if sentID == "1" or len(sent.split("</s>")) > 5 else temp
                 if QA == "A":
+                    if sent.strip() == "":
+                        continue
                     if random.randint(1, 10) > 4:
                         trainData = trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
                     else:
@@ -79,8 +85,6 @@ def make_dataset():
     #                 temp_sent += dialogue["utterance"] + " "
     # print("KoreanConversationSummary Complete.")
     # save
-    trainData.dropna()
-    valData.dropna()
     trainData.to_csv("./data/train.txt", sep="\t")
     valData.to_csv("./data/validation.txt", sep="\t")
     print("All Save Complete.")
@@ -92,30 +96,29 @@ class Preprocesser:
         # HyperParam
         self.lr = 1e-5
         self.batch_size = 16
-        self.embedding_dim = 128
-        self.input_dim = 0
-        self.output_dim = 0
-        # data
-        self.data_num = 0
+        self.embedding_dim = 256
+        self.input_dim = None
+        self.output_dim = None
+        # data  # dialogue : S1</s>S2</s> | response : <s>R1</s>  #  preprocessing input's data?
+        self.data_num = None
         self.PREMODEL_NAME = "byeongal/Ko-DialoGPT"
-        # dialogue : S1</s>S2</s> | response : <s>R1</s>
         self.trainData = pd.read_csv("./data/train.txt", sep="\t", names=["dialogue", "response"])
         self.validationData = pd.read_csv("./data/validation.txt", sep="\t", names=["dialogue", "response"])
         # tokenizers
         self.tokenizer = GPT2TokenizerFast.from_pretrained(self.PREMODEL_NAME)
 
     def getTrainData(self):
-        train_x = self.tokenizer.batch_encode_plus(self.trainData["dialogue"], return_tensors="tf",
+        train_x = self.tokenizer.batch_encode_plus(self.trainData["dialogue"], return_tensors="tf", add_special_tokens=False,
                                                    max_length=self.input_dim, padding="max_length", truncation=True)
-        train_y = self.tokenizer.batch_encode_plus(self.trainData["response"], return_tensors="tf",
+        train_y = self.tokenizer.batch_encode_plus(self.trainData["response"], return_tensors="tf", add_special_tokens=False,
                                                    max_length=self.output_dim, padding="max_length", truncation=True)
 
         return tf.data.Dataset.from_tensor_slices((train_x, train_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def getValidationData(self):
-        validation_x = self.tokenizer.batch_encode_plus(self.validationData["dialogue"], return_tensors="tf",
+        validation_x = self.tokenizer.batch_encode_plus(self.validationData["dialogue"], return_tensors="tf", add_special_tokens=False,
                                                         max_length=self.input_dim, padding="max_length", truncation=True)
-        validation_y = self.tokenizer.batch_encode_plus(self.validationData["response"], return_tensors="tf",
+        validation_y = self.tokenizer.batch_encode_plus(self.validationData["response"], return_tensors="tf", add_special_tokens=False,
                                                         max_length=self.output_dim, padding="max_length", truncation=True)
 
         return tf.data.Dataset.from_tensor_slices((validation_x, validation_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
@@ -126,5 +129,6 @@ class Preprocesser:
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
 
-make_dataset()
+
+
 

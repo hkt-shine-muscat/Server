@@ -1,4 +1,4 @@
 from pydantic import BaseModel
 
-class Hello(BaseModel):
-    greeting: str
+class Message(BaseModel):
+    message: str

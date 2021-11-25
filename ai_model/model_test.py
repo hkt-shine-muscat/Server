@@ -9,5 +9,12 @@ try:
 except IndexError:
     text = input("User >> ")
 
-output = model.generate(p.encoding(text))
+output = model.generate(p.encoding(text),
+                        max_length=1000,
+                        num_beams=5,
+                        top_k=20,
+                        no_repeat_ngram_size=4,
+                        length_penalty=0.65,
+                        repetition_penalty=2.
+                        )
 print(p.decoding(output))

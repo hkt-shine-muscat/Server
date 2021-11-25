@@ -1,4 +1,7 @@
 from pydantic import BaseModel
 
-class Message(BaseModel):
+class MessageRequest(BaseModel):
+    message: str
+
+class MessageResponse(BaseModel):
     message: str

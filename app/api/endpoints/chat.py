@@ -8,8 +8,6 @@ router = APIRouter()
 @router.post("/", response_model=MessageResponse)
 def chat(request: MessageRequest) -> Any:
 
-    print(request.message)
-
     return MessageResponse(
-        message="Test Message"
+        message=request.message
     )

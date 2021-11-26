@@ -96,8 +96,8 @@ class Preprocesser:
         # HyperParam
         self.lr = 3e-5
         self.batch_size = 16
-        self.input_dim = 170  # train_max = 150, val_max = 125  batch, 150 -> batch, 170
-        self.output_dim = 170  # train_max = 169, val_max = 148
+        self.input_dim = None  # train_max = 150, val_max = 125
+        self.output_dim = None  # train_max = 169, val_max = 148
         # data
         self.data_num = 103731  # train - 93478 + validation - 10253
         self.PREMODEL_NAME = "byeongal/Ko-DialoGPT"
@@ -105,28 +105,16 @@ class Preprocesser:
         self.tokenizer = GPT2TokenizerFast.from_pretrained(self.PREMODEL_NAME)
 
     def getTrainData(self):
-        # dialogue : S1</s>S2</s> | response : R1</s>
+        # data's dialogue : S1</s>S2</s> | response : <s>R1</s>
         trainData = pd.read_csv("data/train.txt", sep="\t", names=["dialogue", "response"])
-        trainData["response"] = trainData["response"].apply(lambda row: row[3:-4])
-        train_x = self.tokenizer.batch_encode_plus(trainData["dialogue"].to_list()[1:], return_tensors="tf", add_special_tokens=False,
-                                                   max_length=self.input_dim, padding="max_length", truncation=True)["input_ids"]
-        train_y = self.tokenizer.batch_encode_plus((trainData["dialogue"]+trainData["response"]).to_list()[1:], return_tensors="tf",
-                                                   max_length=self.output_dim, padding="max_length", truncation=True, add_special_tokens=False,)["input_ids"]
-
-        return tf.data.Dataset.from_tensor_slices((train_x, train_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
+        trainData["response"] = trainData["response"].apply(lambda row: row[:])
 
     def getValidationData(self):
         validationData = pd.read_csv("data/validation.txt", sep="\t", names=["dialogue", "response"])
-        validationData["response"] = validationData["response"].apply(lambda row: row[3:-4])
-        validation_x = self.tokenizer.batch_encode_plus(validationData["dialogue"].to_list()[1:], return_tensors="tf", add_special_tokens=False,
-                                                        max_length=self.input_dim, padding="max_length", truncation=True)["input_ids"]
-        validation_y = self.tokenizer.batch_encode_plus((validationData["dialogue"]+validationData["response"]).to_list()[1:], return_tensors="tf",
-                                                        max_length=self.output_dim, padding="max_length", truncation=True,  add_special_tokens=False,)["input_ids"]
-
-        return tf.data.Dataset.from_tensor_slices((validation_x, validation_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
+        pass
 
     def encoding(self, text: str):
-        return self.tokenizer.encode(text + self.tokenizer.eos_token)
+        return self.tokenizer.encode(text, return_tensors="tf")
 
     def decoding(self, ids: list[int]):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)

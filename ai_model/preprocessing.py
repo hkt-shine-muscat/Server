@@ -116,8 +116,8 @@ class Preprocesser:
     def encoding(self, text: str):
         return self.tokenizer.encode(text, return_tensors="tf")
 
-    def decoding(self, ids: list[int]):
-        return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
+    def decoding(self, ids):
+        return self.tokenizer.decode(ids, skip_special_tokens=True)
 
 
 

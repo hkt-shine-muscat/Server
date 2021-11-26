@@ -144,5 +144,5 @@ class Preprocesser:
     def encoding(self, text: str):
         return self.tokenizer.encode(text, return_tensors="tf")
 
-    def decoding(self, ids) -> str:
+    def decoding(self, ids):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)

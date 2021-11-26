@@ -2,7 +2,6 @@ from typing import Any
 from fastapi import APIRouter
 
 from app.schema.model import MessageRequest, MessageResponse
-from app.util.test_chat import test_response
 from ai_model import use_model
 
 router = APIRouter()
@@ -15,6 +14,8 @@ def chat(request: MessageRequest) -> Any:
     for _, value in enumerate(request.message_history):
         chat_histories += f"{value}</s>"
 
+    message = use_model(chat_histories)
+
     return MessageResponse(
-        message=use_model(chat_histories)
+        message=message
     )

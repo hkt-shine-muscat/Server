@@ -142,7 +142,7 @@ class Preprocesser:
         return tf.data.Dataset.from_tensor_slices((validation_x, validation_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def encoding(self, text: str):
-        return self.tokenizer.encode(text + self.tokenizer.eos_token)
+        return self.tokenizer.encode(text, return_tensors="tf")
 
-    def decoding(self, ids):
+    def decoding(self, ids) -> str:
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)

@@ -5,26 +5,33 @@ import random
 import json
 import os
 
+
 def make_dataset():
     trainData = pd.DataFrame(columns=["dialogue", "response"])
     valData = pd.DataFrame(columns=["dialogue", "response"])
     print("Data Making Start.")
     # ChatbotData
-    chatbot_data = pd.read_csv("data/raw_data/Chatbot/ChatbotData.csv", names=["dialogue", "response", "labels"]).loc[1:].drop(["labels"], axis=1)
-    chatbot_data["dialogue"] = chatbot_data["dialogue"].apply(lambda row: row+"</s>")
-    chatbot_data["response"] = chatbot_data["response"].apply(lambda row: "<s>"+row+"</s>")
+    chatbot_data = pd.read_csv("data/raw_data/Chatbot/ChatbotData.csv", names=[
+                               "dialogue", "response", "labels"]).loc[1:].drop(["labels"], axis=1)
+    chatbot_data["dialogue"] = chatbot_data["dialogue"].apply(
+        lambda row: row+"</s>")
+    chatbot_data["response"] = chatbot_data["response"].apply(
+        lambda row: "<s>"+row+"</s>")
     trainData = trainData.append(chatbot_data)
     print("ChatbotData Complete.")
     # emotional
-    emotional_dataT = json.load(open("data/raw_data/emotional/emotional_Training.json", "r+", encoding="utf-8"))
-    emotional_dataV = json.load(open("data/raw_data/emotional/emotional_Validation.json", "r+", encoding="utf-8"))
+    emotional_dataT = json.load(
+        open("data/raw_data/emotional/emotional_Training.json", "r+", encoding="utf-8"))
+    emotional_dataV = json.load(open(
+        "data/raw_data/emotional/emotional_Validation.json", "r+", encoding="utf-8"))
     for conv in emotional_dataT:
         temp = ""
         for key, sent in conv["talk"]["content"].items():
             if key[:2] == "SS":
                 if sent.strip() == "" or len(temp.split("</s>")) > 5:
                     continue
-                trainData = trainData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
+                trainData = trainData.append(pd.DataFrame(
+                    [[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     for conv in emotional_dataV:
         temp = ""
@@ -32,23 +39,28 @@ def make_dataset():
             if key[:2] == "SS":
                 if sent.strip() == "" or len(temp.split("</s>")) > 5:
                     continue
-                valData = valData.append(pd.DataFrame([[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
+                valData = valData.append(pd.DataFrame(
+                    [[temp, "<s>"+sent+"</s>"]], columns=["dialogue", "response"]))
             temp += sent+"</s>"
     print("EmotionalData Complete.")
     # koreanConversation
     for filename in os.listdir("./data/raw_data/koreanConversation"):
         temp = ""
-        ks_data = pd.read_excel("./data/raw_data/koreanConversation/"+filename)[["SENTENCE", "SENTENCEID", "QA"]]
+        ks_data = pd.read_excel(
+            "./data/raw_data/koreanConversation/"+filename)[["SENTENCE", "SENTENCEID", "QA"]]
         try:
             for sent, sentID, QA in ks_data.loc:
-                temp = "" if sentID == "1" or len(temp.split("</s>")) > 5 else temp
+                temp = "" if sentID == "1" or len(
+                    temp.split("</s>")) > 5 else temp
                 if QA == "A":
                     if sent.strip() == "":
                         continue
                     if random.randint(1, 10) > 4:
-                        trainData = trainData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                        trainData = trainData.append(pd.DataFrame(
+                            [[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
                     else:
-                        valData = valData.append(pd.DataFrame([[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
+                        valData = valData.append(pd.DataFrame(
+                            [[temp, "<s>" + sent + "</s>"]], columns=["dialogue", "response"]))
                 temp += sent + "</s>"
         except KeyError:
             continue
@@ -106,8 +118,10 @@ class Preprocesser:
 
     def getTrainData(self):
         # dialogue : S1</s>S2</s> | response : R1</s>
-        trainData = pd.read_csv("data/train.txt", sep="\t", names=["dialogue", "response"])
-        trainData["response"] = trainData["response"].apply(lambda row: row[3:-4])
+        trainData = pd.read_csv(
+            "data/train.txt", sep="\t", names=["dialogue", "response"])
+        trainData["response"] = trainData["response"].apply(
+            lambda row: row[3:-4])
         train_x = self.tokenizer.batch_encode_plus(trainData["dialogue"].to_list()[1:], return_tensors="tf", add_special_tokens=False,
                                                    max_length=self.input_dim, padding="max_length", truncation=True)["input_ids"]
         train_y = self.tokenizer.batch_encode_plus((trainData["dialogue"]+trainData["response"]).to_list()[1:], return_tensors="tf",
@@ -116,8 +130,10 @@ class Preprocesser:
         return tf.data.Dataset.from_tensor_slices((train_x, train_y)).batch(self.batch_size).shuffle(1000, seed=self.RANDOM_SEED)
 
     def getValidationData(self):
-        validationData = pd.read_csv("data/validation.txt", sep="\t", names=["dialogue", "response"])
-        validationData["response"] = validationData["response"].apply(lambda row: row[3:-4])
+        validationData = pd.read_csv(
+            "data/validation.txt", sep="\t", names=["dialogue", "response"])
+        validationData["response"] = validationData["response"].apply(
+            lambda row: row[3:-4])
         validation_x = self.tokenizer.batch_encode_plus(validationData["dialogue"].to_list()[1:], return_tensors="tf", add_special_tokens=False,
                                                         max_length=self.input_dim, padding="max_length", truncation=True)["input_ids"]
         validation_y = self.tokenizer.batch_encode_plus((validationData["dialogue"]+validationData["response"]).to_list()[1:], return_tensors="tf",
@@ -128,9 +144,5 @@ class Preprocesser:
     def encoding(self, text: str):
         return self.tokenizer.encode(text + self.tokenizer.eos_token)
 
-    def decoding(self, ids: list[int]):
+    def decoding(self, ids):
         return self.tokenizer.batch_decode(ids, skip_special_tokens=True)
-
-
-
-

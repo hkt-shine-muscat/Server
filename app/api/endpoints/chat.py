@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from app.schema.model import MessageRequest, MessageResponse
 from app.util.test_chat import test_response
+from ai_model.model_use import use_model
 
 router = APIRouter()
 
@@ -15,5 +16,5 @@ def chat(request: MessageRequest) -> Any:
         chat_histories += f"{value}</s>"
 
     return MessageResponse(
-        message=test_response()
+        message=use_model(chat_histories)
     )

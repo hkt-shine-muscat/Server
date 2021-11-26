@@ -3,7 +3,7 @@ from fastapi import APIRouter
 
 from app.schema.model import MessageRequest, MessageResponse
 from app.util.test_chat import test_response
-from ai_model.model_use import use_model
+from ai_model import use_model
 
 router = APIRouter()
 

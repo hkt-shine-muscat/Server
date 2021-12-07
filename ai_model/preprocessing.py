@@ -96,8 +96,8 @@ class Preprocesser:
         # HyperParam
         self.lr = 3e-5
         self.batch_size = 16
-        self.input_dim = None  # train_max = 150, val_max = 125
-        self.output_dim = None  # train_max = 169, val_max = 148
+        self.input_dim = 150  # train_max = 150, val_max = 125
+        self.output_dim = 70  # train - 63, val - 43 | train_max = 169, val_max = 148
         # data
         self.data_num = 103731  # train - 93478 + validation - 10253
         self.PREMODEL_NAME = "byeongal/Ko-DialoGPT"
@@ -107,11 +107,29 @@ class Preprocesser:
     def getTrainData(self):
         # data's dialogue : S1</s>S2</s> | response : <s>R1</s>
         trainData = pd.read_csv("data/train.txt", sep="\t", names=["dialogue", "response"])
-        trainData["response"] = trainData["response"].apply(lambda row: row[:])
+        trainData["response"] = trainData["response"].apply(lambda row: row[4:])
+        train_x = self.tokenizer.batch_encode_plus(trainData["dialogue"].to_list(), max_length=self.input_dim,
+                                                   padding="max_length", truncation=True, return_tensors="tf")
+        en_train_x = dict()
+        for key, value in train_x.items():
+            en_train_x[key] = value
+        train_Y = self.tokenizer.batch_encode_plus(trainData["response"].to_list(), max_length=self.output_dim,
+                                                   padding="max_length", truncation=True, return_tensors="tf")["input_ids"]
+
+        return tf.data.Dataset.from_tensor_slices((en_train_x, train_Y)).batch(self.batch_size).shuffle(256, seed=self.RANDOM_SEED)
 
     def getValidationData(self):
         validationData = pd.read_csv("data/validation.txt", sep="\t", names=["dialogue", "response"])
-        pass
+        validationData["response"] = validationData["response"].apply(lambda row: row[4:])
+        val_x = self.tokenizer.batch_encode_plus(validationData["dialogue"].to_list(), max_length=self.input_dim,
+                                                 padding="max_length", truncation=True, return_tensors="tf")
+        en_val_x = dict()
+        for key, value in val_x.items():
+            en_val_x[key] = value
+        val_Y = self.tokenizer.batch_encode_plus(validationData["response"].to_list(), max_length=self.output_dim,
+                                                 padding="max_length", truncation=True, return_tensors="tf")["input_ids"]
+
+        return tf.data.Dataset.from_tensor_slices((en_val_x, val_Y)).batch(self.batch_size).shuffle(256,seed=self.RANDOM_SEED)
 
     def encoding(self, text: str):
         return self.tokenizer.encode(text, return_tensors="tf")

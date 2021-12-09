@@ -1,5 +1,5 @@
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler
-from transformers import TFAutoModelForCausalLM
+from transformers import TFGPT2LMHeadModel
 from preprocessing import Preprocesser
 import tensorflow as tf
 
@@ -14,7 +14,7 @@ def lr_scheduler(epoch, lr):
 
 if __name__ == "__main__":
     p = Preprocesser()
-    model = TFAutoModelForCausalLM.from_pretrained(p.PREMODEL_NAME, from_pt=True)
+    model = TFGPT2LMHeadModel.from_pretrained(p.PREMODEL_NAME, from_pt=True)
     history = ""
     # loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)

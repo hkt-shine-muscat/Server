@@ -12,13 +12,10 @@ def lr_scheduler(epoch, lr):
     else:
         return 1e-5
 
-class DialoGPT(tf.keras.Model, TFGPT2LMHeadModel):
+class DialoGPT(tf.keras.Model):
     def __init__(self, *args, **kwargs):
         super(DialoGPT, self).__init__(*args, **kwargs)
         self.koDialoGPT = TFGPT2LMHeadModel.from_pretrained(p.PREMODEL_NAME, from_pt=True)
-
-        self.max_len = p.max_len
-        self.batch_size = p.batch_size
 
     def call(self, inputs, training=None, mask=None):
         # {'input_ids': (batch, max_len), 'attention_mask': (batch, max_len)
@@ -35,9 +32,7 @@ if __name__ == "__main__":
     epochs = 5
     pos = 1
 
-    # model = TFGPT2LMHeadModel.from_pretrained(p.PREMODEL_NAME, from_pt=True)
     model = DialoGPT()
-    # loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     loss = tf.keras.losses.SparseCategoricalCrossentropy()
 
     for optim in ["adam", "rmsprop", "nadam"]:
